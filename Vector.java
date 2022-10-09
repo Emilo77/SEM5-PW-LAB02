@@ -23,9 +23,7 @@ public class Vector {
         int starting;
         int amount;
 
-        public AddingHelper(Vector vector, Vector other,
-                            Vector result, int starting,
-                            int amount) {
+        public AddingHelper(Vector vector, Vector other, Vector result, int starting, int amount) {
             this.vector = vector;
             this.other = other;
             this.starting = starting;
@@ -37,8 +35,7 @@ public class Vector {
         public void run() {
 
             for (int i = starting; i < starting + amount; i++) {
-                result.dimension.set(i,
-                        vector.dimension.get(i) + other.dimension.get(i));
+                result.dimension.set(i, vector.dimension.get(i) + other.dimension.get(i));
             }
         }
     }
@@ -50,8 +47,7 @@ public class Vector {
         int starting;
         int amount;
 
-        public DotHelper(Vector vector, Vector other, ArrayList<Integer> result,
-                         int starting, int amount) {
+        public DotHelper(Vector vector, Vector other, ArrayList<Integer> result, int starting, int amount) {
             this.vector = vector;
             this.other = other;
             this.result = result;
@@ -70,9 +66,9 @@ public class Vector {
     Vector sum(Vector other) {
         if (this.dimension.size() != other.dimension.size()) {
             System.out.println("Wektory są różnej długości");
-            return new Vector(new ArrayList<Integer>());
+            return new Vector(new ArrayList<>());
         }
-        ArrayList<Integer> arr = new ArrayList<Integer>(Collections.nCopies(dimension.size(), 0));
+        ArrayList<Integer> arr = new ArrayList<>(Collections.nCopies(dimension.size(), 0));
         Vector result = new Vector(arr);
 
         int threadNumber = Math.ceilDiv(dimension.size(), 10);
@@ -95,10 +91,6 @@ public class Vector {
         } catch (InterruptedException e) {
             System.out.println("Proces zatrzymany!");
         }
-
-        if (result.dimension.size() == 0) {
-            result.dimension.add(0);
-        }
         return result;
     }
 
@@ -108,7 +100,7 @@ public class Vector {
             return 0;
         }
         Integer result = 0;
-        ArrayList<Integer> arr = new ArrayList<Integer>(Collections.nCopies(dimension.size(), 0));
+        ArrayList<Integer> arr = new ArrayList<>(Collections.nCopies(dimension.size(), 0));
 
         int threadNumber = Math.ceilDiv(dimension.size(), 10);
         int actualNumber = dimension.size();
@@ -116,11 +108,9 @@ public class Vector {
         Thread[] threads = new Thread[threadNumber];
         for (int i = 0; i < threadNumber; i++) {
             if (actualNumber > 10) {
-                threads[i] = new Thread(new DotHelper(this, other, arr,
-                        i * 10, 10));
+                threads[i] = new Thread(new DotHelper(this, other, arr, i * 10, 10));
             } else {
-                threads[i] = new Thread(new DotHelper(this, other,
-                        arr, i * 10, actualNumber));
+                threads[i] = new Thread(new DotHelper(this, other, arr, i * 10, actualNumber));
             }
             actualNumber -= 10;
             threads[i].start();
@@ -163,48 +153,73 @@ public class Vector {
             return 0;
         }
     }
+
     void vectorPrint() {
-        System.out.print("[");
-        for(int i = 0; i < this.dimension.size() - 1; i++) {
-            System.out.print(this.dimension.get(i) + ", ");
+        if (this.dimension.size() > 0) {
+            System.out.print("[");
+            for (int i = 0; i < this.dimension.size() - 1; i++) {
+                System.out.print(this.dimension.get(i) + ", ");
+            }
+            System.out.print(this.dimension.get(this.dimension.size() - 1) + "]");
+        } else {
+            System.out.print("[]");
         }
-        System.out.print(this.dimension.get(this.dimension.size()-1) + "]");
         System.out.println();
     }
-    static void randomVector(Vector vec, int DimensionSize) {
-        for(int i = 0; i < DimensionSize; i++) {
+
+    static Vector randomVector(int dimensionSize) {
+        Vector result = new Vector(new ArrayList<>());
+        for (int i = 0; i < dimensionSize; i++) {
             Random random = new Random();
-            vec.dimension.add(random.nextInt(1000));
+            result.dimension.add(random.nextInt(1000));
         }
+        return result;
     }
 
-    public static void main(String args[]) {
-
-        ArrayList<Integer> arr1 = new ArrayList<>();
-        ArrayList<Integer> arr2 = new ArrayList<>();
-
-        Vector vector1 = new Vector(arr1);
-        Vector vector2 = new Vector(arr2);
-        Random random = new Random();
-        int size = random.nextInt(100);
-
-        randomVector(vector1, size);
-        randomVector(vector2, size);
-
+    static void printTest(Vector sumSeqRes, Vector sumRes, int dotSeqRes, int dotRes) {
         System.out.println("Wektor będący sumą, policzony sekwencyjnie: ");
-        Vector vectorRes = vector1.sumSeq(vector2);
-        vectorRes.vectorPrint();
-
+        sumSeqRes.vectorPrint();
         System.out.println();
         System.out.println("Wektor będący sumą, policzony współbieżnie: ");
-        Vector vectorRes2 = vector1.sum(vector2);
-        vectorRes2.vectorPrint();
+        sumRes.vectorPrint();
 
         System.out.println();
         System.out.println("Iloczyn skalarny policzony sekwencyjnie: ");
-        System.out.println(vector1.dotSeq(vector2));
+        System.out.println(dotSeqRes);
         System.out.println();
         System.out.println("Iloczyn skalarny policzony współbieżnie: ");
-        System.out.println(vector1.dot(vector2));
+        System.out.println(dotRes);
+        System.out.println();
+    }
+
+    static void overallTest(int n, boolean print) {
+
+        System.out.println("Starting overallTest...");
+
+        Random random = new Random();
+
+        for (int i = 0; i < n; i++) {
+            int size = random.nextInt(100);
+
+            Vector vector1 = randomVector(size);
+            Vector vector2 = randomVector(size);
+
+            if (!vector1.sumSeq(vector2).dimension.equals(vector1.sum(vector2).dimension)
+                    || vector1.dotSeq(vector2) != vector1.dot(vector2)) {
+                System.out.println("Test " + i + " failed!");
+                printTest(vector1.sumSeq(vector2), vector1.sum(vector2), vector1.dotSeq(vector2), vector1.dot(vector2));
+                return;
+            } else if (print) {
+                printTest(vector1.sumSeq(vector2), vector1.sum(vector2), vector1.dotSeq(vector2), vector1.dot(vector2));
+            }
+        }
+        System.out.println("All tests passed!");
+    }
+
+    /* aby zobaczyć dokładnie dane wektorów,
+    można zmienić wartość print na true */
+    public static void main(String[] args) {
+        overallTest(10000, true);
+
     }
 }
